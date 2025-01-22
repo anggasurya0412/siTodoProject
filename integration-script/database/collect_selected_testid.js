@@ -2,6 +2,7 @@ require('dotenv').config(); // Load environment variables from .env
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('pg');
+const { prefixTestID } = require(`${process.env.CONFIGFILE}`);
 
 // Function to parse command-line arguments
 function parseArgs() {
@@ -55,12 +56,7 @@ function extractTestDetails(jsonPath) {
         added_lines.forEach((line) => {
             const match = line.content.match(testIdPattern);
             if (match) {
-                const platformName = {
-                    'BE-C': 'BE',
-                    'FE-C': 'FE',
-                    'AD-C': 'Android',
-                    'IOS-C': 'IOS'
-                }[match[1]];
+                const platformName = prefixTestID[match[1]];
                 testDetails.added.push({
                     testid: match[2],
                     platformName: platformName,
@@ -73,12 +69,7 @@ function extractTestDetails(jsonPath) {
         deleted_lines.forEach((line) => {
             const match = line.content.match(testIdPattern);
             if (match) {
-                const platformName = {
-                    'BE-C': 'BE',
-                    'FE-C': 'FE',
-                    'AD-C': 'Android',
-                    'IOS-C': 'IOS'
-                }[match[1]];
+                const platformName = prefixTestID[match[1]];
                 testDetails.deleted.push({
                     testid: match[2],
                     platformName: platformName,
