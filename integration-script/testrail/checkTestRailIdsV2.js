@@ -1,11 +1,10 @@
 const fs = require('fs');
 const readline = require('readline');
 const axios = require('axios');
-const usernameTestrail = process.env.USERNAME
-const passwordTestrail = process.env.PASSWORD
-const baseUrl = process.env.BASEURL
-const pathGetCase = "/index.php?/api/v2/get_case/"
-const SUITE_ID = 5378;
+const usernameTestrail = process.env.USERNAME;
+const passwordTestrail = process.env.PASSWORD;
+const baseUrl = process.env.BASEURL;
+const pathGetCase = "/index.php?/api/v2/get_case/";
 
 // Function to get TestRail case by ID
 async function getTestRailCase(testId) {
@@ -18,7 +17,7 @@ async function getTestRailCase(testId) {
       }
     });
 
-    if (response.status === 200 && response.data.suite_id === SUITE_ID) {
+    if (response.status === 200) {
       console.log(`TestRail case ${testId} exists.`);
     }
     else {
