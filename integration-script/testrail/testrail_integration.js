@@ -55,7 +55,7 @@ async function parseTestCaseIdsFromXML(xmlFile) {
     const result = await parser.parseStringPromise(xml);
     
     // Define prefixes to look for
-    const prefixes = ["%BE-C", "%FE-C"];
+    const prefixes = ["%BE-C", "%FE-C", '%AD-C', '%IOS-C'];
     const caseDetails = [];
 
     // Function to recursively search for test case IDs and status in XML structure
