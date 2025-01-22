@@ -1,8 +1,10 @@
 const fs = require('fs');
 const readline = require('readline');
 const axios = require('axios');
-const usernameTestrail = "angga.utama@thelionparcel.com"
-const passwordTestrail = "sdetLP12345!"
+const usernameTestrail = process.env.USERNAME;
+const passwordTestrail = process.env.PASSWORD;
+const baseUrl = process.env.BASEURL;
+const pathUpdateTestrail = '/index.php?/api/v2/update_case/'
 
 // Function to get the request body based on the prefix
 function getRequestBody(prefix) {
@@ -45,7 +47,7 @@ async function updateTestRailCase(testId, prefix) {
       return;
     }
 
-    const response = await axios.post(`https://lionparcelqa21.testrail.io/index.php?/api/v2/update_case/${testId}`, requestBody, {
+    const response = await axios.post(`${baseUrl}${pathUpdateTestrail}${testId}`, requestBody, {
       auth: {
         username: usernameTestrail,
         password: passwordTestrail

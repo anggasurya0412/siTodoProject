@@ -1,14 +1,15 @@
 const fs = require('fs');
 const readline = require('readline');
 const axios = require('axios');
-const usernameTestrail = "angga.utama@thelionparcel.com"
-const passwordTestrail = "sdetLP12345!"
-const SUITE_ID = 5378;
+const usernameTestrail = process.env.USERNAME;
+const passwordTestrail = process.env.PASSWORD;
+const baseUrl = process.env.BASEURL;
+const pathGetCase = "/index.php?/api/v2/get_case/";
 
 // Function to get TestRail case by ID
 async function getTestRailCase(testId) {
   try {
-    const response = await axios.get(`https://lionparcelqa21.testrail.io/index.php?/api/v2/get_case/${testId}`, {
+    const response = await axios.get(`${baseUrl}${pathGetCase}${testId}`, {
       auth: {
         username: usernameTestrail,
         password: passwordTestrail
