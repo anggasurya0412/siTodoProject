@@ -63,6 +63,7 @@ async function insertIntoDatabase(result) {
         console.log(`Inserted test result for testId ${result.testId}`);
     } catch (err) {
         console.error(`Error inserting test result for testId ${result.testId}:`, err);
+        process.exit(1); // Exit the process with an error code
     }
 }
 
