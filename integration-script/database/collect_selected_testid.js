@@ -12,7 +12,7 @@ function parseArgs() {
     for (let i = 0; i < args.length; i++) {
         switch (args[i]) {
             case '--branch':
-                options.BASE_BRANCH = args[++i];
+                options.branch = args[++i];
                 break;
             case '--squad':
                 options.squad = args[++i];
@@ -94,7 +94,7 @@ async function saveToDatabase(testDetails) {
     await client.connect();
     const prAuthorEmail = process.env.PR_AUTHOR || '';
     const squadTarget = process.env.squad;
-    const branchTarget = process.env.BASE_BRANCH;
+    const branchTarget = process.env.branch;
     let env
     if (branchTarget === 'master' || branchTarget === 'main') {
         env = "Staging"
