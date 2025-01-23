@@ -1,3 +1,4 @@
+require('dotenv').config(); // Load environment variables from .env
 const axios = require('axios');
 const fs = require('fs');
 const xml2js = require('xml2js');
@@ -5,9 +6,9 @@ const xml2js = require('xml2js');
 // Configuration
 const API_URL = process.env.BASEURL;
 const PATH_GET_TEST_RUN = '/index.php?/api/v2/get_plan/';
-const PATH_CREATE_TEST_RUN = '/add_plan_entry/';
-const PATH_UPDATE_TEST_RUN = '/update_plan_entry/';
-const PATH_TEST_RESULT = '/add_results_for_cases/';
+const PATH_CREATE_TEST_RUN = '/index.php?/api/v2/add_plan_entry/';
+const PATH_UPDATE_TEST_RUN = '/index.php?/api/v2/update_plan_entry/';
+const PATH_TEST_RESULT = '/index.php?/api/v2/add_results_for_cases/';
 const usernameTestrail = process.env.USERNAME;
 const passwordTestrail = process.env.PASSWORD;
 const SUITE_ID = process.env.SUITEID;  // Replace with your suite ID
