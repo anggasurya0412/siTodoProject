@@ -82,7 +82,7 @@ function extractTestDetails(jsonPath) {
     return testDetails;
 }
 
-async function saveToDatabase(testDetails) {
+async function saveToDatabase(testDetails, branch, squad) {
     const client = new Client({
         user: process.env.RobotDbUser,
         host: process.env.RobotDbHost,
@@ -93,10 +93,8 @@ async function saveToDatabase(testDetails) {
 
     await client.connect();
     const prAuthorEmail = process.env.PR_AUTHOR || '';
-    const squadTarget = process.env.squad;
-    const branchTarget = process.env.branch;
     let env
-    if (branchTarget === 'master' || branchTarget === 'main') {
+    if (branch === 'master' || branch === 'main') {
         env = "Staging"
         }
     else {
@@ -119,8 +117,7 @@ async function saveToDatabase(testDetails) {
                 tc_updated_at = NOW(),
                 tc_isobsolate = false
         `;
-        const values = [squadTarget, test.testid, test.platformName, branchTarget, env, prAuthorEmail, test.location];
-        console.log(values)
+        const values = [squad, test.testid, test.platformName, branch, env, prAuthorEmail, test.location];
         try {
             await client.query(query, values);
         } catch (err) {
@@ -159,7 +156,7 @@ async function main() {
 
         console.log('Extracted Test Details:', JSON.stringify(testDetails, null, 2));
 
-        await saveToDatabase(testDetails, options.branch, options.squad, process.env.PR_AUTHOR || ' ');
+        await saveToDatabase(testDetails, options.branch, options.squad);
     } catch (err) {
         console.error('Error:', err);
         process.exit(1);
