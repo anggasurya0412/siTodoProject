@@ -97,6 +97,15 @@ async function saveToDatabase(testDetails) {
     console.log(`Author Name: ${prAuthorEmail}`)
 
     for (const test of testDetails.added) {
+        const squad = options.squad;
+        const branch = options.branch;
+        let env
+        if (branch === 'master' || branch === 'main') {
+            env = "Staging"
+            }
+        else {
+            env = "Dev"
+            }
         const query = `
             INSERT INTO test_case (tc_squad_name, tc_test_id, tc_platform_name, tc_branch_name, tc_env_name, tc_author_name, tc_fp_name, tc_created_at, tc_isobsolate)
             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), false)
@@ -110,7 +119,8 @@ async function saveToDatabase(testDetails) {
                 tc_updated_at = NOW(),
                 tc_isobsolate = false
         `;
-        const values = [test.squad, test.testid, test.platformName, test.branch, test.env, prAuthorEmail, test.location];
+        const values = [squad, test.testid, test.platformName, branch, env, prAuthorEmail, test.location];
+        console.log(values)
         try {
             await client.query(query, values);
         } catch (err) {
