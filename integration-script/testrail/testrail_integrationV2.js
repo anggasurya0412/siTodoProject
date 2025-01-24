@@ -3,16 +3,16 @@ const axios = require('axios');
 const fs = require('fs');
 const xml2js = require('xml2js');
 const readline = require('readline');
-
+const { prefixSuiteID } = require(`${process.env.SUITEIDCONFIG}`);
 
 // Configuration
-const API_URL = process.env.BASEURL;
+const API_URL = process.env.TESTRAILBASEURL;
 const PATH_GET_TEST_RUN = '/index.php?/api/v2/get_plan/';
 const PATH_CREATE_TEST_RUN = '/index.php?/api/v2/add_plan_entry/';
 const PATH_UPDATE_TEST_RUN = '/index.php?/api/v2/update_plan_entry/';
 const PATH_TEST_RESULT = '/index.php?/api/v2/add_results_for_cases/';
-const usernameTestrail = process.env.USERNAME;
-const passwordTestrail = process.env.PASSWORD;
+const usernameTestrail = process.env.TESTRAILUSERNAME;
+const passwordTestrail = process.env.TESTRAILPASSWORD;
 
 // Simple flag parsing from process.argv
 let RUN_NAME = null;
@@ -97,75 +97,52 @@ async function getUniqueSuiteNames(xmlFile) {
     }
 }
 
-async function getSuiteIds(suiteNames) {
-    const suiteIds = {};
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-
-    console.log(`Detected Suites: ${suiteNames.join(', ')}`);
-    console.log('Please enter the Suite IDs for the detected suites in the same order, separated by commas.');
-
-    const input = await new Promise((resolve) => {
-        rl.question('Enter Suite IDs: ', (input) => resolve(input));
-    });
-
-    rl.close();
-
-    const ids = input.split(',').map((id) => id.trim());
-    if (ids.length !== suiteNames.length) {
-        throw new Error('The number of entered Suite IDs does not match the number of detected suites.');
-    }
-
-    suiteNames.forEach((suiteName, index) => {
-        suiteIds[suiteName] = ids[index];
-    });
-
-    return suiteIds;
-}
-
 // Function to extract test case IDs and status from XML file
-async function parseTestCaseIdsFromXML(xmlFile, targetSuiteName) {
+async function parseTestCaseIdsFromXML(xmlFile) {
     const xml = fs.readFileSync(xmlFile, 'utf-8');
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(xml);
 
     const prefixes = ["%BE-C", "%FE-C", "%AD-C", "%IOS-C"];
-    const caseDetails = [];
+    const caseDetailsBySuite = {};
+
+    function getSuiteFromPath(path) {
+        const match = path.match(/\/TestSuite\/([^/]+)\//);
+        if (match && match[1]) {
+            return match[1]; // Extract $SuiteName
+        }
+        return 'Master'; // Default to "Master" if no specific suite name is found
+    }
 
     function findTestCases(obj) {
         if (obj && typeof obj === 'object') {
-            // Check if this is a test case
-            if (obj.$ && obj.$.source) {
-                const source = obj.$.source;
-                const suiteMatch = source.match(/TestSuite\/([^/]+)\/.*\.robot$/);
-                
-                if (suiteMatch && suiteMatch[1] === targetSuiteName) {
-                    // If this is a test element
-                    if (obj.test) {
-                        obj.test.forEach(test => {
-                            if (test.doc && Array.isArray(test.doc)) {
-                                test.doc.forEach(docText => {
-                                    const trimmedText = docText.trim();
-                                    prefixes.forEach(prefix => {
-                                        if (trimmedText.startsWith(prefix)) {
-                                            const caseId = trimmedText.split(' ')[0].substring(prefix.length);
-                                            const status = test.status?.[0]?.$?.status || 'UNKNOWN';
-                                            const statusId = status === 'FAIL' ? 5 : 1;
-                                            
-                                            caseDetails.push({
-                                                id: caseId,
-                                                status: statusId,
-                                                name: test.$.name || 'Unknown Test'
-                                            });
-                                        }
+            if (obj.test && Array.isArray(obj.test)) {
+                obj.test.forEach(test => {
+                    if (test.doc && Array.isArray(test.doc)) {
+                        test.doc.forEach(docText => {
+                            const trimmedText = docText.trim();
+                            prefixes.forEach(prefix => {
+                                if (trimmedText.startsWith(prefix)) {
+                                    const caseId = trimmedText.split(' ')[0].substring(prefix.length);
+                                    const source = obj.$.source || '';
+                                    const suiteName = getSuiteFromPath(source);
+                                    const status = test.status?.[0]?.$?.status || 'UNKNOWN';
+                                    const statusId = status === 'FAIL' ? 5 : 1;
+
+                                    if (!caseDetailsBySuite[suiteName]) {
+                                        caseDetailsBySuite[suiteName] = [];
+                                    }
+
+                                    caseDetailsBySuite[suiteName].push({
+                                        id: caseId,
+                                        status: statusId,
+                                        name: test.$.name || 'Unknown Test'
                                     });
-                                });
-                            }
+                                }
+                            });
                         });
                     }
-                }
+                });
             }
 
             // Recursively search through all properties
@@ -180,14 +157,13 @@ async function parseTestCaseIdsFromXML(xmlFile, targetSuiteName) {
     }
 
     findTestCases(result);
-    
-    if (caseDetails.length > 0) {
-        console.log(`Found ${caseDetails.length} test cases for suite "${targetSuiteName}":`, caseDetails);
-    } else {
-        console.log(`No test cases found for suite "${targetSuiteName}"`);
+
+    // Log cases per suite
+    for (const suite in caseDetailsBySuite) {
+        console.log(`Suite "${suite}" has ${caseDetailsBySuite[suite].length} test cases`);
     }
-    
-    return caseDetails;
+
+    return caseDetailsBySuite;
 }
 
 // Get existing test runs
@@ -272,61 +248,24 @@ async function addTestResults(runId, results) {
 // Main function
 (async function () {
     try {
-        // Get unique suite names from XML
-        const suiteNames = await getUniqueSuiteNames(TARGET_FILE);
-        console.log('Found suites:', suiteNames.join(', '));
+        const caseDetailsBySuite = await parseTestCaseIdsFromXML(TARGET_FILE);
 
-        // Create readline interface
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-
-        // Get suite IDs from user input
-        console.log('Detected Suites:', suiteNames.join(', '));
-        console.log('Please enter the Suite IDs for the detected suites in the same order, separated by commas.');
-        
-        const suiteIdsInput = await new Promise((resolve) => {
-            rl.question('Enter Suite IDs: ', (input) => resolve(input));
-        });
-        
-        rl.close();
-
-        const suiteIds = suiteIdsInput.split(',').map(id => id.trim());
-
-        // Validate input length
-        if (suiteIds.length !== suiteNames.length) {
-            throw new Error('The number of entered Suite IDs does not match the number of detected suites.');
-        }
-
-        // Create a map of suite names to their IDs
-        const suiteIdMap = {};
-        suiteNames.forEach((name, index) => {
-            suiteIdMap[name] = parseInt(suiteIds[index]);
-        });
-
-        // Process each suite
-        for (const suiteName of suiteNames) {
-            const suiteId = suiteIdMap[suiteName];
+        for (const suiteName in caseDetailsBySuite) {
+            const caseDetails = caseDetailsBySuite[suiteName];
+            const suiteId = parseInt(prefixSuiteID[suiteName] || prefixSuiteID['Master']);
             console.log(`Processing suite "${suiteName}" with ID ${suiteId}`);
-
-            // Get test cases for this suite
-            const caseDetails = await parseTestCaseIdsFromXML(TARGET_FILE, suiteName);
-            console.log(`Test Cases for Suite "${suiteName}":`, caseDetails);
 
             if (caseDetails.length === 0) {
                 console.log(`No test cases found under suite "${suiteName}".`);
                 continue;
             }
 
-            // Create or update test run for this suite
             const runName = `${RUN_NAME} - ${suiteName}`;
             const testRuns = await getTestRuns();
             const existingRun = testRuns.find(run => run.name === runName);
 
             let runId;
             if (existingRun) {
-                // Update existing run
                 runId = await updateTestRun(
                     existingRun.runs[0].entry_id,
                     runName,
@@ -334,11 +273,9 @@ async function addTestResults(runId, results) {
                     suiteId
                 );
             } else {
-                // Create new run
                 runId = await createTestRun(runName, caseDetails, suiteId);
             }
 
-            // Add test results
             if (runId) {
                 const results = caseDetails.map(tc => ({
                     case_id: tc.id,
@@ -351,13 +288,11 @@ async function addTestResults(runId, results) {
                 console.log(`Updated results for suite "${suiteName}"`);
             }
         }
-
-        console.log('All test results have been updated.');
     } catch (error) {
         console.error('An error occurred:', error.message);
-        process.exit(1);
     }
 })();
+
 
 
 
