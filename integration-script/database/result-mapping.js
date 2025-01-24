@@ -25,7 +25,7 @@ const envName = envMap[envInput.toLowerCase()] || 'Staging';
 const client = new Client({
     user: process.env.RobotDbUser,
     host: process.env.RobotDbHost,
-    database: "reporting",
+    database: process.env.RobotDbName,
     password: process.env.RobotDbPass,
     port: process.env.RobotDbPort
 });
