@@ -1,11 +1,12 @@
 const axios = require('axios');
+require('dotenv').config(); // Load environment variables from .env
 
 // Configuration
-const API_URL = process.env.BASEURL;
+const API_URL = process.env.TESTRAILBASEURL;
 const PATH_GET_TEST_RUN = '/index.php?/api/v2/get_plan/';
 const TESTPLAN_ID = process.argv[2];  // Get test run name from command-line argument
-const usernameTestrail = process.env.USERNAME;
-const passwordTestrail = process.env.PASSWORD;
+const usernameTestrail = process.env.TESTRAILUSERNAME;
+const passwordTestrail = process.env.TESTRAILPASSWORD;
 const ID_PROJECT = process.env.PROJECTID;  // Genesis
 let response
 
