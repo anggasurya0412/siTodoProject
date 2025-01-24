@@ -11,8 +11,8 @@ const PATH_GET_TEST_RUN = '/index.php?/api/v2/get_plan/';
 const PATH_CREATE_TEST_RUN = '/index.php?/api/v2/add_plan_entry/';
 const PATH_UPDATE_TEST_RUN = '/index.php?/api/v2/update_plan_entry/';
 const PATH_TEST_RESULT = '/index.php?/api/v2/add_results_for_cases/';
-const usernameTestrail = process.env.USERNAME || 'angga.utama@thelionparcel.com';
-const passwordTestrail = process.env.PASSWORD || 'sdetLP12345!';
+const usernameTestrail = process.env.USERNAME;
+const passwordTestrail = process.env.PASSWORD;
 
 // Simple flag parsing from process.argv
 let RUN_NAME = null;
