@@ -2,7 +2,7 @@ require('dotenv').config(); // Load environment variables from .env
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('pg');
-const { prefixTestID } = require(`${process.env.CONFIGFILE}`);
+const { prefixTestID } = require(`${process.env.TESTIDCONFIG}`);
 
 // Function to parse command-line arguments
 function parseArgs() {
@@ -42,7 +42,6 @@ function extractTestDetails(jsonPath) {
     const changes = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')); // Parse JSON file
 
     const testDetails = {
-        added: [],
         deleted: [],
     };
 
@@ -50,20 +49,7 @@ function extractTestDetails(jsonPath) {
     const testIdPattern = /(FE-C|BE-C|AD-C|IOS-C)(\d+)/;
 
     changes.forEach((change) => {
-        const { added_lines, deleted_lines, file } = change;
-
-        // Process added lines
-        added_lines.forEach((line) => {
-            const match = line.content.match(testIdPattern);
-            if (match) {
-                const platformName = prefixTestID[match[1]];
-                testDetails.added.push({
-                    testid: match[2],
-                    platformName: platformName,
-                    location: file
-                });
-            }
-        });
+        const { deleted_lines, file } = change;
 
         // Process deleted lines
         deleted_lines.forEach((line) => {
@@ -86,7 +72,7 @@ async function saveToDatabase(testDetails, branch, squad) {
     const client = new Client({
         user: process.env.RobotDbUser,
         host: process.env.RobotDbHost,
-        database: "reporting",
+        database: process.env.RobotDbName,
         password: process.env.RobotDbPass,
         port: process.env.RobotDbPort,
     });
@@ -102,38 +88,19 @@ async function saveToDatabase(testDetails, branch, squad) {
         }
 
     console.log(`Author Name: ${prAuthorEmail}`)
-
-    for (const test of testDetails.added) {
-        const query = `
-            INSERT INTO test_case (tc_squad_name, tc_test_id, tc_platform_name, tc_branch_name, tc_env_name, tc_author_name, tc_fp_name, tc_created_at, tc_isobsolate)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), false)
-            ON CONFLICT (tc_test_id)
-            DO UPDATE SET
-                tc_platform_name = EXCLUDED.tc_platform_name,
-                tc_branch_name = EXCLUDED.tc_branch_name,
-                tc_env_name = EXCLUDED.tc_env_name,
-                tc_fp_name = EXCLUDED.tc_fp_name,
-                tc_updated_by = EXCLUDED.tc_author_name,
-                tc_updated_at = NOW(),
-                tc_isobsolate = false
-        `;
-        const values = [squad, test.testid, test.platformName, branch, env, prAuthorEmail, test.location];
-        try {
-            await client.query(query, values);
-        } catch (err) {
-            console.error(`Error inserting/updating added test ID ${test.testid}:`, err);
-        }
-    }
-
+    
     for (const test of testDetails.deleted) {
         const query = `
             UPDATE test_case
             SET tc_updated_at = NOW(),
                 tc_isobsolate = true,
-                tc_updated_by = $1
-            WHERE tc_test_id = $2
+                tc_squad_name = $1,
+                tc_updated_by = $2
+                tc_branch_name = $3,
+                tc_env_name = $4,
+            WHERE tc_test_id = $5
         `;
-        const values = [prAuthorEmail, test.testid];
+        const values = [squad, prAuthorEmail, branch, env, test.testid];
         try {
             const res = await client.query(query, values);
             if (res.rowCount === 0) {
