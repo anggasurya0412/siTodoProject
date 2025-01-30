@@ -5,12 +5,13 @@ const { Client } = require('pg'); // Import PostgreSQL client
 require('dotenv').config(); // Load environment variables from .env file
 
 const args = require('minimist')(process.argv.slice(2), {
-    string: ['env', 'file', 'plan-id', 'release-tag'],
+    string: ['env', 'file', 'plan-id', 'release-tag', 'retry'],
 });
 
 const xmlFile = args.file || 'output.xml'; // Default to 'output.xml' if not provided
 const planId = args['plan-id'] || 'Unknown Plan ID';
 const releaseTag = args['release-tag'] || 'Unknown Release Tag';
+const isRetry = args['retry'] || false;
 
 // Normalize envName based on the provided argument, case-insensitive
 const envMap = {
@@ -42,8 +43,9 @@ async function insertIntoDatabase(result) {
             tr_release_tag,
             tr_test_result,
             tr_time_execution,
-            tr_update_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            tr_update_at,
+            tr_is_retry
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
     
     const values = [
@@ -55,7 +57,8 @@ async function insertIntoDatabase(result) {
         result.releaseTag,
         result.statusTest,
         result.timeExecution,
-        result.updateAt // Add the timestamp value
+        result.updateAt, // Add the timestamp value
+        result.isRetry
     ];
 
     try {
@@ -145,7 +148,8 @@ async function main() {
                     releaseTag: releaseTag,
                     statusTest: statusValue,
                     timeExecution: elapsed,
-                    updateAt: formatTimestamp(generatedTimestamp) // Format and assign the timestamp
+                    updateAt: formatTimestamp(generatedTimestamp), // Format and assign the timestamp
+                    isRetry: isRetry
                 });
             });
 
