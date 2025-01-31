@@ -85,7 +85,7 @@ function extractTestIdAndPlatform(doc) {
             return { testId, platform };
         }
     }
-    return { testId: 'No Test ID Found', platform: 'Unknown Platform' };
+    return { testId: `No Test ID Found With Testcase: ${doc}`, platform: `Unknown Platform With Testcase: ${doc}` };
 }
 
 // Helper function to format the timestamp (ISO to PostgreSQL format)
