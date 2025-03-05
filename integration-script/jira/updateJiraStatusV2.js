@@ -6,7 +6,7 @@ const usernameJira = process.env.USERNAME;
 const passwordJira = process.env.PASSWORD;
 const baseUrl = process.env.BASE_URL;
 const filename = process.env.FILENAME;
-const rootPath = = process.env.ROOT_PATH || __dirname;
+const rootPath = process.env.ROOT_PATH || __dirname;
 
 // Load transition mappings from JSON file
 const configPath = path.join(rootPath, filename);
