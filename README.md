@@ -29,8 +29,8 @@ To integrate the submodule in a GitHub Action, create a `.yml` file under `.gith
 
 ## 📌 How To Use
 
-- **Database Integration**: [Documentation Guide](https://github.com/anggasurya0412/siTodoProject/blob/master/integration-script/database/Readme.md)
-- **GitHub Interaction**: [Documentation Guide](https://github.com/anggasurya0412/siTodoProject/blob/master/integration-script/github/Readme.md)
-- **Robot Framework**: [Documentation Guide](https://github.com/anggasurya0412/siTodoProject/blob/master/integration-script/robotframework/Readme.md)
-- **Testrail Integration**: [Documentation Guide](https://github.com/anggasurya0412/siTodoProject/blob/master/integration-script/testrail/Readme.md)
+- **Database Integration**: [Documentation Guide](integration-script/database/Readme.md)
+- **GitHub Interaction**: [Documentation Guide](integration-script/github/Readme.md)
+- **Robot Framework**: [Documentation Guide](integration-script/robotframework/Readme.md)
+- **Testrail Integration**: [Documentation Guide](integration-script/testrail/Readme.md)
 
