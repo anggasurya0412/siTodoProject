@@ -1,5 +1,6 @@
 const axios = require('axios');
 const github = require('@actions/github');
+const minimist = require('minimist');
 
 async function closePullRequest(octokit, owner, repo, pullNumber) {
   await octokit.pulls.update({
@@ -12,6 +13,13 @@ async function closePullRequest(octokit, owner, repo, pullNumber) {
 
 async function main() {
   try {
+    const args = minimist(process.argv.slice(2));
+    const daysOpenThreshold = args.daysopen ? parseInt(args.daysopen, 10) : 2; // Default to 2 if not provided
+
+    if (isNaN(daysOpenThreshold) || daysOpenThreshold < 0) {
+      throw new Error("Invalid daysOpen value. It must be a non-negative number.");
+    }
+
     const githubToken = process.env.GITHUB_TOKEN;
     const owner = github.context.payload.repository.owner.login;
     const repo = github.context.payload.repository.name;
@@ -45,7 +53,7 @@ async function main() {
         currentDateCopy.setDate(currentDateCopy.getDate() - 1);
       }
       
-      if (daysOpen >= 2) { // Close PRs open for 2 or more working days
+      if (daysOpen >= daysOpenThreshold) { // Close PRs open for 2 or more working days
         // Close the pull request
         await closePullRequest(octokit, owner, repo, pullRequest.number);
       }
