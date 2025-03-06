@@ -76,7 +76,7 @@ if (require.main === module) {
   const [, , prTitle, status] = process.argv;
 
   if (!prTitle || !status) {
-    console.error("❌ Usage: node utils.js '<PR_TITLE>' <STATUS>");
+    console.error("❌ Usage: node updateJiraStatusV2.js '<PR_TITLE>' <STATUS>");
     process.exit(1);
   }
 
