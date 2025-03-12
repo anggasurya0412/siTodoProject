@@ -4,7 +4,7 @@ const readline = require('readline');
 const github = require('@actions/github');
 
 async function checkForDuplicateTestIds() {
-  const files = glob.sync('**/TestSuite/**/*.robot');
+  const files = glob.sync('**/*_tests.robot');
   const testIds = new Map();
   
   const token = process.env.GITHUB_TOKEN;
