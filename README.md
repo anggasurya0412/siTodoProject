@@ -34,3 +34,7 @@ To integrate the submodule in a GitHub Action, create a `.yml` file under `.gith
 - **Robot Framework**: [Documentation Guide](integration-script/robotframework/Readme.md)
 - **Testrail Integration**: [Documentation Guide](integration-script/testrail/Readme.md)
 
+## Tips
+Please follow this guidance if wanna use all feature
+- **Best Practices for Robot Framework UI Testing: A Guide to Clean Automation** : [Robot Framework UI Testing](https://medium.com/@anggasuryautama041295/best-practices-for-robot-framework-ui-testing-a-guide-to-clean-automation-d5feb872afdc)
+
